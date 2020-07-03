@@ -79,13 +79,13 @@ If, for some reason, the cluster initialization fails, login to the master node,
 3. Run the playbook again after fixing the cause of the issue.
 
 ## 5. Add Worker Node to the Cluster
-Before running the playbook, make sure the host/domain name occurrances are correct - lines 1,13,17.
+Before running the playbook, make sure the host/domain name occurrances in the playbook are correct - lines 1,13,17.
 
 ```
 ansible-playbook -i hosts.ini playbooks/worker.yaml
 ```
 
-Run `kubectl get nodes` again to verify.
+On master node, run `kubectl get nodes` again to verify.
 >OUTPUT:
 ```
 NAME     STATUS   ROLES    AGE   VERSION
