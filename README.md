@@ -4,7 +4,7 @@ _Setup a two-node Kubernetes cluster_.
 This repository contains Ansible plabooks reqiured to bootstrap a two-node Kubernetes cluster - one master and one worker node.
 It also contains `Vagrantfile` configured for `libvirt` provider to two create the required nodes.
 
-The playbooks were tested on Ubuntu 18.04 servers. It is recommended to use the same OS version to avoid issues.
+> The playbooks were tested on Ubuntu 18.04 servers. It is recommended to use the same OS version to avoid issues.
 
 # Steps to Bootstrap the Cluster
 
@@ -56,18 +56,17 @@ ansible-playbook -i hosts.ini playbooks/kube-dependencies.yaml
 > This playbook refers the hosts by group name `nodes`.
 
 ## 4. Bootstrap the Master Node
-Before running the playbook, replace `MASTER_IP_ADDRESS` with the master node's address.
-
-If you have replaced `localdomain` in the inventory file with your own domain name, 
-make sure it is update in this playbooks as well - lines 1 and 7.
-
+Before running the playbook below, replace `MASTER_IP_ADDRESS` with the master node's address.
 Also replace occurances of `USERNAME` with your remote user name - lines 18,27,29,30,34.
 
 ```
 ansible-playbook -i hosts.ini playbooks/master.yaml
 ```
 
-Login to the master node and run `kubectl get nodes` to verify.
+If you have replaced `localdomain` in the inventory file with your own domain name, 
+make sure it is update in this playbooks as well - lines 1 and 7.
+
+Once completed successfully, login to the master node and run `kubectl get nodes` to verify.
 > OUTPUT:
 ```
 NAME     STATUS   ROLES    AGE   VERSION
