@@ -1,12 +1,13 @@
-# k1
-Setup a single-master and single-worker Kubernetes cluster
+# k2
+_Setup a two-node Kubernetes cluster_.
 
-This repository contains Ansible plabooks reqiured to bootstrap a 2-node Kubernetes cluster - one master and one worker node.
-It also contains `Vagrantfile` configured for `libvirt` provider to two create the required nodes. 
+This repository contains Ansible plabooks reqiured to bootstrap a two-node Kubernetes cluster - one master and one worker node.
+It also contains `Vagrantfile` configured for `libvirt` provider to two create the required nodes.
 
 The playbooks were tested on Ubuntu 18.04 servers. It is recommended to use the same OS version to avoid issues.
 
 # Steps to Bootstrap the Cluster
+
 ## 1. Provision Nodes
 Provision two nodes - one master and one worker node. 
 
@@ -16,12 +17,12 @@ Provision a user with sudo privilege and enable key-based SSH authentication for
 sudo for this user for the duration of cluster setup. 
 
 ## 2. Update Ansible Inventory
-The `hosts.ini` can serve as the Ansible inventory for this setup. Update this file will proper IP addresses for your Kubernetes nodes.
+The `hosts.ini` is a sample inventory for this setup. Update this file with proper IP addresses for your Kubernetes nodes.
 The `master` and `cluster` entries are set to the same IP address. `cluster` can be assigned the address of `kube-apiserver` load balancer
-in the future if more control plane nodes are added in the future.
+if more control plane nodes are added in the future.
 
-Replace `localdomain` with your own domain name. Make sure to update the playbooks with correct host name if you change the name in the
-inventory file.
+You can optionally replace `localdomain` with your own domain name. Make sure to update the playbooks with correct host names if you 
+change the host name entries in the inventory file.
 
 If the remote user name (on the nodes) is different from your local user name (on the Ansible control node) make sure to update the inventory 
 file with the remote user name. Example:
@@ -31,14 +32,9 @@ worker.localdomain ansible_host=192.168.33.120 ansible_user=username
 ```
 
 ## 3. Update /etc/hosts on all nodes
-Run the playbook `playbooks/etc-hosts.yaml` to add host entries on all nodes.
-
 ```
 ansible-playbook -i hosts.ini playbooks/etc-hosts.yaml
 ```
-
->NOTE: When running the playbooks, if the remote user is not configured for passwordless sudo add the option `-K` or `--ask-become-pass`
->to all `ansible-playbook` commands.
 
 Ruuning the playbook will add entries such as the following to `/etc/hosts` on all nodes.
 ```
@@ -49,12 +45,15 @@ Ruuning the playbook will add entries such as the following to `/etc/hosts` on a
 # END ANSIBLE MANAGED BLOCK
 ```
 
+>NOTE: When running the playbooks, if the remote user is not configured for passwordless sudo add the option `-K` or `--ask-become-pass`
+>to all `ansible-playbook` commands.
+
 ## 4. Install Dependencies
-Run the playbook `playbooks/kube-dependencies.yaml`.
 
 ```
 ansible-playbook -i hosts.ini playbooks/kube-dependencies.yaml
 ```
+> This playbook refers the hosts by group name `nodes`.
 
 ## 4. Bootstrap the Master Node
 Before running the playbook, replace `MASTER_IP_ADDRESS` with the master node's address.
@@ -62,7 +61,7 @@ Before running the playbook, replace `MASTER_IP_ADDRESS` with the master node's 
 If you have replaced `localdomain` in the inventory file with your own domain name, 
 make sure it is update in this playbooks as well - lines 1 and 7.
 
-Also replace occurances of `USERNAME` with your user name - lines 18,27,29,30,34.
+Also replace occurances of `USERNAME` with your remote user name - lines 18,27,29,30,34.
 
 ```
 ansible-playbook -i hosts.ini playbooks/master.yaml
@@ -75,6 +74,11 @@ NAME     STATUS   ROLES    AGE   VERSION
 master   Ready    master   47m   v1.18.4
 ```
 
+If, for some reason, the cluster initialization fails, login to the master node, and run
+1. `sudo kubeadm reset`
+2. `sudo rm /root/cluster_initialized.txt`
+3. Run the playbook again after fixing the cause of the issue.
+
 ## 5. Add Worker Node to the Cluster
 Before running the playbook, make sure the host/domain name occurrances are correct - lines 1,13,17.
 
@@ -86,8 +90,8 @@ Run `kubectl get nodes` again to verify.
 >OUTPUT:
 ```
 NAME     STATUS   ROLES    AGE   VERSION
-master   Ready    master   47m   v1.18.4
-worker   Ready    <none>   46m   v1.18.4
+master   Ready    master   4m   v1.18.4
+worker   Ready    <none>   1m   v1.18.4
 ```
 
 ## 6. Tests
