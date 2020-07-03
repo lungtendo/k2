@@ -1,0 +1,14 @@
+- hosts: all
+  become: yes
+  tasks:
+    - name: build /etc/hosts file
+      blockinfile:
+        dest: /etc/hosts
+        content: "{{ lookup('template', 'templates/hosts.j2') }}"
+        state: present
+
+    - name: remove 127.0.1.1 entries
+      lineinfile:
+        path: /etc/hosts
+        state: absent
+        regexp: '^127\.0\.1\.1'

@@ -1,0 +1,126 @@
+- hosts: nodes
+  become: yes
+  tasks:
+    - name: remove swapfile from /etc/fstab
+      mount:
+        name: "{{ item }}"
+        fstype: swap
+        state: absent
+      with_items:
+        - swap
+        - none
+
+    - name: disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: copy config file to load br_netfilter
+      copy:
+        src: configs/br-netfilter.conf
+        dest: /etc/modules-load.d/br-netfilter.conf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: load br_netfilter module
+      modprobe:
+        name: br_netfilter
+        state: present        
+
+    - name: copy sysctl params config file for containerd
+      copy:
+        src: configs/sysctl.conf
+        dest: /etc/sysctl.d/99-kubernetes-sysctl.conf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: reload kernel params
+      shell: sysctl --system
+
+        
+    - name: install apt-transport-https, ca-certificates, curl, software-properties-common
+      apt:
+        name: "{{ packages }}" 
+        state: present
+        update_cache: true
+        # force: yes
+      vars:
+        packages:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+
+    - name: add Docker's official GPG keys
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: add Docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable
+        state: present
+        filename: docker
+
+    - name: install docker-ce
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: true
+      vars:
+        packages:
+          - containerd.io=1.2.13-2
+          - docker-ce=5:19.03.11~3-0~ubuntu-bionic
+          - docker-ce-cli=5:19.03.11~3-0~ubuntu-bionic
+
+    - name: make sure the /etc/docker directory exists
+      file:
+        path: /etc/docker
+        state: directory
+        mode: 0755
+
+    - name: copy docker daemon config
+      copy:
+        src: configs/docker-daemon.json
+        dest: /etc/docker/daemon.json
+        mode: 0644
+
+    - name: create directory /etc/systemd/system/docker.service.d
+      file:
+        path: /etc/systemd/system/docker.service.d
+        state: directory
+        mode: 0755
+
+    - name: enable docker service
+      systemd:
+        name: docker
+        enabled: yes
+          
+    - name: restart docker service
+      systemd:
+        state: restarted
+        daemon_reload: yes
+        name: docker
+          
+    - name: add Kubernetes apt-key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: add Kubernetes APT repository
+      apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+        filename: kubernetes
+
+    - name: install kubernetes binaries
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: true
+      vars:
+        packages:
+          - kubelet=1.18.4-00
+          - kubeadm=1.18.4-00
+          - kubectl=1.18.4-00
