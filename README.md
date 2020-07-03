@@ -64,7 +64,7 @@ ansible-playbook -i hosts.ini playbooks/master.yaml
 ```
 
 If you have replaced `localdomain` in the inventory file with your own domain name, 
-make sure it is update in this playbooks as well - lines 1 and 7.
+make sure it is updated in this playbook as well - lines 1 and 7.
 
 Once completed successfully, login to the master node and run `kubectl get nodes` to verify.
 > OUTPUT:
