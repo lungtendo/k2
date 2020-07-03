@@ -111,6 +111,12 @@ kubectl expose deploy nginx --port 80 --target-port 80
 kubctl scale deploy nginx --replicas=2
 ```
 
+### Show all resources
+```
+kubectl get all
+```
+
+
 ## 7. Cleanup
 ```
 kubectl delete deploy,svc -l app=nginx
